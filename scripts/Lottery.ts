@@ -10,6 +10,10 @@ async function main() {
     "IStakeManager",
     "0x0000000000000000000000000000000000001001"
   );
+  const oasyx = await ethers.getContractAt(
+    "IERC721",
+    "0x4688e596Fb8ffAa9F7c1f02985B44651CF642123"
+  );
 
   // ステーキングコントラクトからバリデータ毎のステーク量を取得
   const epoch = 0;
@@ -37,12 +41,16 @@ async function main() {
   const decimal = BigNumber.from("0x" + digest).toString();
 
   // 下4桁を取得
-  const winner = decimal.slice(-4);
+  const tokenId = decimal.slice(-4);
+
+  // 当選者を取得
+  const winner = await oasyx.ownerOf(tokenId)
 
   const output = [
     `stake   : ${stake}`,
     `sha256  : ${digest}`,
     `decimal : ${decimal}`,
+    `tokenId : ${tokenId}`,
     `winner  : ${winner}`,
   ].join("\n");
 
