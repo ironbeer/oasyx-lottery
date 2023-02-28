@@ -4,8 +4,13 @@ import { ethers } from "hardhat";
 
 // 抽選ブロック
 const LOTTERY_BLOCK = ~~process.env.LOTTERY_BLOCK!;
+const ADD_EPOCH = ~~(process.env.ADD_EPOCH || 0)
 
 async function main() {
+  const environment = await ethers.getContractAt(
+    "IEnvironment",
+    "0x0000000000000000000000000000000000001000"
+  );
   const stakeManager = await ethers.getContractAt(
     "IStakeManager",
     "0x0000000000000000000000000000000000001001"
@@ -14,14 +19,13 @@ async function main() {
     "IERC721",
     "0x4688e596Fb8ffAa9F7c1f02985B44651CF642123"
   );
+  const overrides = { blockTag: LOTTERY_BLOCK }
 
   // ステーキングコントラクトからバリデータ毎のステーク量を取得
-  const epoch = 0;
+  const epoch = (await environment.epoch(overrides)).toNumber() + ADD_EPOCH;
   const cursol = 0;
   const howMany = 999;
-  const { stakes } = await stakeManager.getValidators(epoch, cursol, howMany, {
-    blockTag: LOTTERY_BLOCK,
-  });
+  const { stakes } = await stakeManager.getValidators(epoch, cursol, howMany, overrides);
 
   // ステーク量を合計
   const total = stakes.reduce(
@@ -47,6 +51,7 @@ async function main() {
   const winner = await oasyx.ownerOf(tokenId)
 
   const output = [
+    `epoch   : ${epoch}`,
     `stake   : ${stake}`,
     `sha256  : ${digest}`,
     `decimal : ${decimal}`,
